@@ -13,8 +13,10 @@ var game = {
 
     _init: function () {
         game.loop_functions = [];
-        game.actual_w = 400;
-        game.actual_h = 400;
+        game.w = 20;
+        game.h = 20;
+        game.actual_w = 20 * (1 + 2 * game.w);
+        game.actual_h = 20 * (1 + 2 * game.h);
         game.progress_load.style.width = "0px";
 
         //scene
@@ -60,8 +62,6 @@ var game = {
                             setTimeout(function () {
                                 game.progress_text.innerHTML = "Loading: Boring game stuff";
                                 game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
-                                game.w = 12;
-                                game.h = 12;
                                 game.tot_x_cols = 2 * game.w + 1;
                                 game.tot_z_cols = 2 * game.h + 1;
                                 game.block_x = game.actual_w / game.tot_x_cols;
@@ -92,6 +92,10 @@ var game = {
                                                 game.draw();
 
                                                 setTimeout(function () {
+
+                                                    game.zombies = [];
+                                                    game.zombies.push(new zombie((game.start_x * 2 + 1.5) * game.block_x - game.actual_w / 2, (game.start_z * 2 + 1.5) * game.block_z - game.actual_h / 2, 1));
+
                                                     document.getElementById('loading').style.display = "none";
                                                     document.getElementById('welcome').style.display = "none";
                                                     document.getElementById('map-container').style.display = "inline-block";
@@ -131,7 +135,7 @@ var game = {
         var floorTexture = new THREE.ImageUtils.loadTexture('./img/gravel.jpg');
         floorTexture.wrapS = THREE.RepeatWrapping;
         floorTexture.wrapT = THREE.RepeatWrapping;
-        floorTexture.repeat.set(300, 300);
+        floorTexture.repeat.set(game.actual_w * 2, game.actual_h * 2);
         floorTexture.needsUpdate = true;
         var floorMaterial = new THREE.MeshLambertMaterial({
             map: floorTexture
@@ -150,9 +154,21 @@ var game = {
         //Maze map logic
         game.minimap = document.getElementById('minimap');
         game.fog = document.getElementById('fog');
+        game.minimap.style.width = 20 * game.w + "px";
+        game.minimap.style.height = 20 * game.h + "px";
+        game.minimap.style.top = "0px";
+        game.minimap.style.left = "0px";
+        game.minimap.width = 20 * (game.w);
+        game.minimap.height = 20 * (game.h);
         var out = new my.ProceduralMaze(game.minimap, game.w, game.h, game.start_x, game.start_z);
         game.map = out.map;
         game.bc = out.c;
+        game.fog.height = 20 * (game.h);
+        game.fog.width = 20 * (game.w);
+        game.fog.style.left = "0px";
+        game.fog.style.top = "0px";
+        game.fog.style.width = 20 * game.w + "px";
+        game.fog.style.height = 20 * game.h + "px";
         game.fog.width = game.minimap.width;
         game.fog.height = game.minimap.height;
     },
@@ -230,9 +246,9 @@ var game = {
     controls: function () {
         //Movement Controls
         game.controls = new THREE.FirstPersonControls(game.camera);
-        game.controls.movementSpeed = 30;
+        game.controls.movementSpeed = 20;
         game.controls.lookSpeed = 0.1;
-        game.controls.lookVertical = false; //true;
+        game.controls.lookVertical = true;
         //game.controls.constrainVertical = true;
     },
 
@@ -242,6 +258,7 @@ var game = {
         game.loop_functions.push(
             function (delta, now) {
                 game.controls.update(delta);
+                game.camera.position.y = 1;
             }
         );
 
@@ -293,6 +310,33 @@ var game = {
             }
         );
 
+        //Local Fog Logic
+        game.loop_functions.push(
+            function () {
+                var position = game.camera.position;
+                var x = position.x;
+                var z = position.z;
+
+                var curr_x = (x + game.actual_w / 2) / game.actual_w * game.minimap.width;
+                var curr_z = (z + game.actual_h / 2) / game.actual_h * game.minimap.height;
+
+                var xb = game.minimap.width / game.w;
+                var zb = game.minimap.height / game.h;
+                var xbuffer = xb / 2;
+                var zbuffer = zb / 2;
+                var xtot = 2 * xbuffer + xb * (game.w - 1);
+                var ztot = 2 * zbuffer + zb * (game.h - 1);
+
+                for (var i = 0; i < game.zombies.length; i++) {
+                    let obj = game.zombies[i].obj;
+                    obj.position.x = game.camera.position.x + 10;
+                    obj.position.z = game.camera.position.z + 10;
+                }
+
+                //game.scene.fog.density = (curr_x / xtot) * (curr_z / ztot);
+            }
+        );
+
         // Draw Scene
         game.loop_functions.push(
             function () {
@@ -319,11 +363,23 @@ var game = {
                 var pX = curr_x;
                 var pY = curr_z;
 
+                var xb = game.minimap.width / game.w;
+                var zb = game.minimap.height / game.h;
+                var xbuffer = xb / 2;
+                var zbuffer = zb / 2;
+                var xtot = 2 * xbuffer + xb * (game.w - 1);
+                var ztot = 2 * zbuffer + zb * (game.h - 1);
+                var cdx = Math.sign(curr_x - xtot / 2) * Math.pow((curr_x - xtot / 2) / (xtot / 2), 1) * (curr_x - xtot / 2);
+                var cdz = Math.sign(curr_z - ztot / 2) * Math.pow((curr_z - ztot / 2) / (ztot / 2), 1) * (curr_z - ztot / 2);
+
+                //console.log(xb, xbuffer, xtot, curr_x, curr_z);
+
                 game.minimap.width = game.minimap.width;
-                game.minimap.style.left = (100 - curr_x) / 100 * 20 + "px";
-                game.minimap.style.top = (100 - curr_z) / 100 * 20 + "px";
-                game.fog.style.left = (100 - curr_x) / 100 * 20 + "px";
-                game.fog.style.top = (100 - curr_z) / 100 * 20 + "px";
+                game.fog.width = game.fog.width;
+                game.minimap.style.left = 200 / 2 - xtot / 2 - cdx + "px";
+                game.minimap.style.top = 200 / 2 - ztot / 2 - cdz + "px";
+                game.fog.style.left = 200 / 2 - xtot / 2 - cdx + "px";
+                game.fog.style.top = 200 / 2 - ztot / 2 - cdz + "px";
 
                 ctx.drawImage(game.bc, 0, 0);
 
@@ -371,6 +427,36 @@ var game = {
                 );
             }
         );
+    }
+}
+
+var zombie = function (x, z, alg) {
+    var geometry = new THREE.CubeGeometry(0.5, 1.4, 0.5);
+
+    var texture = new THREE.Texture(generateTextureCanvas());
+    texture.anisotropy = game.renderer.getMaxAnisotropy();
+    texture.needsUpdate = true;
+
+    var material = new THREE.MeshLambertMaterial({
+        map: texture,
+        vertexColors: THREE.VertexColors
+    });
+
+    var obj = new THREE.Mesh(geometry, material);
+    obj.position.set(x, 0.7, z);
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+
+    if (game.scene) {
+        game.scene.add(obj);
+        return {
+            x: x,
+            z: z,
+            alg: alg,
+            obj: obj
+        };
+    } else {
+        return null;
     }
 }
 

@@ -9,11 +9,6 @@ my.ProceduralMaze = function (map_canvas, w, h, start_x, start_y) {
     // 0s are "path" blocks
     var map = [];
 
-    //console.log(map_canvas);
-
-    map_canvas.width = 200;
-    map_canvas.height = 200;
-
     var backCanvas = document.createElement('canvas');
     backCanvas.width = map_canvas.width;
     backCanvas.height = map_canvas.height;
@@ -91,11 +86,12 @@ my.ProceduralMaze = function (map_canvas, w, h, start_x, start_y) {
 
         var done_bool = false;
 
-        var rand_bypass = randomIntFromInterval(-20, 6);
+        var rand_bypass = randomIntFromInterval(0, 100);
+        var rand_bypass_tol = 98;
 
         if (!(rand_bound == 0 && y == 0) && !(rand_bound == 1 && x == w - 1) && !(rand_bound == 2 && y == h - 1) && !(rand_bound == 3 && x == 0)) {
             if (rand_bound == 0) {
-                if ((map[x][y - 1].touched == 0 || rand_bypass > 5) && x > -1 && x < w && y - 1 > -1 && y - 1 < h) {
+                if ((map[x][y - 1].touched == 0 || rand_bypass > rand_bypass_tol) && x > -1 && x < w && y - 1 > -1 && y - 1 < h) {
                     ctx.beginPath();
                     ctx.moveTo(buffer + x_block * x, buffer + y_block * y + 5);
                     ctx.lineTo(buffer + x_block * x, buffer + y_block * (y - 1) - 5);
@@ -109,7 +105,7 @@ my.ProceduralMaze = function (map_canvas, w, h, start_x, start_y) {
                     last = [x, y - 1];
                 }
             } else if (rand_bound == 1) {
-                if ((map[x + 1][y].touched == 0 || rand_bypass > 5) && x + 1 > -1 && x + 1 < w && y > -1 && y < h) {
+                if ((map[x + 1][y].touched == 0 || rand_bypass > rand_bypass_tol) && x + 1 > -1 && x + 1 < w && y > -1 && y < h) {
                     ctx.beginPath();
                     ctx.moveTo(buffer + x_block * x - 5, buffer + y_block * y);
                     ctx.lineTo(buffer + x_block * (x + 1) + 5, buffer + y_block * y);
@@ -123,7 +119,7 @@ my.ProceduralMaze = function (map_canvas, w, h, start_x, start_y) {
                     last = [x + 1, y];
                 }
             } else if (rand_bound == 2) {
-                if ((map[x][y + 1].touched == 0 || rand_bypass > 5) && x > -1 && x < w && y + 1 > -1 && y + 1 < h) {
+                if ((map[x][y + 1].touched == 0 || rand_bypass > rand_bypass_tol) && x > -1 && x < w && y + 1 > -1 && y + 1 < h) {
                     ctx.beginPath();
                     ctx.moveTo(buffer + x_block * x, buffer + y_block * y - 5);
                     ctx.lineTo(buffer + x_block * x, buffer + y_block * (y + 1) + 5);
@@ -137,7 +133,7 @@ my.ProceduralMaze = function (map_canvas, w, h, start_x, start_y) {
                     last = [x, y + 1];
                 }
             } else if (rand_bound == 3) {
-                if ((map[x - 1][y].touched == 0 || rand_bypass > 5) && x - 1 > -1 && x - 1 < w && y > -1 && y < h) {
+                if ((map[x - 1][y].touched == 0 || rand_bypass > rand_bypass_tol) && x - 1 > -1 && x - 1 < w && y > -1 && y < h) {
                     ctx.beginPath();
                     ctx.moveTo(buffer + x_block * x + 5, buffer + y_block * y);
                     ctx.lineTo(buffer + x_block * (x - 1) - 5, buffer + y_block * y);
