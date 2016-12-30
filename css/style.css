@@ -1,6 +1,15 @@
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
 body {
     margin: 0;
     padding: 0;
+    height: 100%;
+    width: 100%;
     background: #000000;
     overflow: hidden;
 }
@@ -24,11 +33,11 @@ h1 {
     font-family: calibri;
     vertical-align: middle;
     text-align: center;
-    border-top: 2px solid #ccc;
-    border-bottom: 2px solid #ccc;
+    border: 0;
     padding: 30px 0;
     background: #000;
     z-index: 10000;
+    margin: 0;
 }
 
 #enter {

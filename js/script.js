@@ -4,6 +4,11 @@ var game = {
         document.getElementById('enter').style.display = "none";
         document.getElementById('loading').style.display = "inline-block";
 
+        var stats = new Stats();
+        stats.showPanel(0);
+        document.body.appendChild(stats.dom);
+        game.stats = stats;
+
         game.progress_load = document.getElementById('progress');
         game.progress_text = document.getElementById('load_text');
         setTimeout(function () {
@@ -12,9 +17,11 @@ var game = {
     },
 
     _init: function () {
+        game.paused = false;
+        game.ended = false;
         game.loop_functions = [];
-        game.w = 10;
-        game.h = 10;
+        game.w = 5;
+        game.h = 5;
         game.actual_w = 20 * (1 + 2 * game.w);
         game.actual_h = 20 * (1 + 2 * game.h);
         game.progress_load.style.width = "0px";
@@ -56,7 +63,7 @@ var game = {
                         setTimeout(function () {
                             game.progress_text.innerHTML = "Loading: The ground to which you cling";
                             game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
-                            game.plane();
+                            game.create_plane();
 
                             //Game Constants
                             setTimeout(function () {
@@ -82,19 +89,12 @@ var game = {
                                         game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
                                         game.generate_city();
 
-                                        //Zombies
-                                        game.zombies = [];
-
-                                        for (var i = 0; i < 10; i++) {
-                                            var finder = new PF.AStarFinder();
-                                            var z = new zombie(finder, randomIntFromInterval(3, 5));
-                                            game.zombies.push(z);
-                                        }
+                                        game.generate_zombies();
 
                                         setTimeout(function () {
                                             game.progress_text.innerHTML = "Loading: Your ability to move";
                                             game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
-                                            game.controls();
+                                            game.gen_controls();
                                             setTimeout(function () {
                                                 game.progress_text.innerHTML = "Loading: The final countdown";
                                                 game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
@@ -138,7 +138,7 @@ var game = {
         game.scene.add(spotLight.target);
     },
 
-    plane: function () {
+    create_plane: function () {
         //Ground
         var floorTexture = new THREE.ImageUtils.loadTexture('./img/gravel.jpg');
         floorTexture.wrapS = THREE.RepeatWrapping;
@@ -238,8 +238,6 @@ var game = {
 
 
         var grid = transpose(game.city_map);
-        console.log(game.city_map);
-        console.log(grid);
         game.grid = new PF.Grid(grid);
 
         var texture = new THREE.Texture(generateTextureCanvas());
@@ -257,13 +255,75 @@ var game = {
         game.scene.add(game.cityMesh);
     },
 
-    controls: function () {
+    generate_zombies: function () {
+        //Zombies
+        game.zombies = [];
+
+        for (var i = 0; i < 1; i++) {
+            let alg_num = randomIntFromInterval(1, 9);
+            switch (alg_num) {
+            case 1:
+                var finder = new PF.AStarFinder();
+                break;
+            case 2:
+                var finder = new PF.BestFirstFinder();
+                break;
+            case 3:
+                var finder = new PF.BreadthFirstFinder();
+                break;
+            case 4:
+                var finder = new PF.DijkstraFinder();
+                break;
+            case 5:
+                var finder = new PF.JumpPointFinder();
+                break;
+            case 6:
+                var finder = new PF.BiAStarFinder();
+                break;
+            case 7:
+                var finder = new PF.BiBestFirstFinder();
+                break;
+            case 8:
+                var finder = new PF.BiBreadthFirstFinder();
+                break;
+            case 9:
+                var finder = new PF.BiDijkstraFinder();
+                break;
+            }
+
+            let z = new zombie(finder, randomIntFromInterval(3, 5));
+            game.zombies.push(z);
+        }
+    },
+
+    gen_controls: function () {
         //Movement Controls
         game.controls = new THREE.FirstPersonControls(game.camera);
         game.controls.movementSpeed = 20;
         game.controls.lookSpeed = 0.1;
         game.controls.lookVertical = true;
         //game.controls.constrainVertical = true;
+    },
+
+    end: function () {
+        game.scene.fog.density = 0.2;
+        game.scene.fog.color.setRGB(1, 0, 0);
+        game.paused = true;
+        game.ended = true;
+    },
+
+    reset: function () {
+        document.getElementById('welcome').style.display = "";
+        document.getElementById('title').style.display = "";
+        document.getElementById('enter').style.display = "";
+        document.body.removeChild(game.renderer.domElement);
+        document.body.removeChild(game.stats.dom);
+        document.getElementById('map-container').style.display = "none";
+        game.controls = null;
+        game.renderer = null;
+        game.scene = null;
+        game.paused = false;
+        game.ended = false;
     },
 
     init_loop_functions: function () {
@@ -345,54 +405,101 @@ var game = {
         game.loop_functions.push(
             function (delta, now) {
                 var position = game.camera.position;
-                var x = position.x;
-                var z = position.z;
-                var step_x = game.step_x; //((x + game.actual_w / 2) / game.block_x) | 0;
-                var step_z = game.step_z; //((z + game.actual_h / 2) / game.block_z) | 0;
+                var step_x = game.step_x;
+                var step_z = game.step_z;
 
-                console.log(step_x, step_z, game.city_map[step_x][step_z]);
+                var min_dist = 999999999;
+                var closest_z = '';
+                var best_theta = 0;
+
+                var look_vector = new THREE.Vector3(0, 0, -1);
+                look_vector.applyQuaternion(game.camera.quaternion);
 
                 for (var i = 0; i < game.zombies.length; i++) {
                     let grid = game.grid.clone();
                     let z = game.zombies[i];
                     let path = z.alg.findPath(z.step_x, z.step_z, step_x, step_z, grid);
-                    if (path.length >= 2) {
+                    var speed = z.speed * delta;
+                    var curr_x = z.x;
+                    var curr_z = z.z;
+
+                    if (path.length >= 2 && !(z.step_x == step_x && z.step_z == step_z)) {
                         var next_coord = path[1];
-                        var curr_x = z.x;
-                        var curr_z = z.z;
                         var next_x = (next_coord[0] + 0.5) * game.block_x - game.actual_w / 2;
                         var next_z = (next_coord[1] + 0.5) * game.block_z - game.actual_h / 2;
-                        console.log(z.x, z.z, step_x, step_z, next_x, next_z, next_coord[0], next_coord[1]);
+                    } else {
+                        var next_x = position.x;
+                        var next_z = position.z;
+                    }
 
-                        var speed = z.speed * delta;
-                        var dir = new THREE.Vector3(next_x - curr_x, 0, next_z - curr_z).normalize().multiplyScalar(speed);
-                        //TODO: more natural movement + some randomness
-                        z.x += dir.x; // + Math.random() * Math.pow(-1, (Math.random() * 100) | 0) / 50;
-                        z.z += dir.z; // + Math.random() * Math.pow(-1, (Math.random() * 100) | 0) / 50;
-                        z.update();
+                    var dir = new THREE.Vector3(next_x - curr_x, 0, next_z - curr_z).normalize().multiplyScalar(speed);
+                    //TODO: more natural movement + some randomness
+                    z.x += dir.x;
+                    z.z += dir.z;
+                    z.update();
+
+                    var dist = Math.sqrt(Math.pow(z.x - position.x, 2) + Math.pow(z.z - position.z, 2));
+
+                    if (dist < 1) {
+                        game.end();
+                    }
+
+                    //Local Fog Logic
+                    var cos_theta = (look_vector.x * (z.x - position.x) + look_vector.z * (z.z - position.z)) / (Math.sqrt(Math.pow(look_vector.x, 2) + Math.pow(look_vector.z, 2)) * Math.sqrt(Math.pow((z.x - position.x), 2) + Math.pow((z.z - position.z), 2)));
+                    var theta = Math.acos(cos_theta);
+
+
+
+                    var flag = false;
+
+                    if (theta < Math.PI / 2) {
+                        if ((z.step_x == game.step_x || z.step_x == game.step_x - 1 || z.step_x == game.step_x + 1) && (z.step_z == game.step_z || z.step_z == game.step_z - 1 || z.step_z == game.step_z + 1)) {
+                            flag = true;
+                        } else {
+                            if (z.step_x == game.step_x) {
+                                let start = Math.min(z.step_z, game.step_z);
+                                let stop = Math.max(z.step_z, game.step_z);
+                                if (stop - start < 6) {
+                                    flag = true;
+                                    for (var j = start; j < stop; j++) {
+                                        if (game.city_map[z.step_x][j] == 1) {
+                                            flag = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            } else if (z.step_z == game.step_z) {
+                                let start = Math.min(z.step_x, game.step_x);
+                                let stop = Math.max(z.step_x, game.step_x);
+                                if (stop - start < 6) {
+                                    flag = true;
+                                    for (var j = start; j < stop; j++) {
+                                        if (game.city_map[j][z.step_z] == 1) {
+                                            flag = false;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    console.log((theta / (Math.PI) * 180) % 180, flag);
+
+                    if (flag == true) {
+                        min_dist = Math.min(dist, min_dist);
+                        if (dist == min_dist) {
+                            closest_z = z;
+                            best_theta = theta;
+                        }
                     }
                 }
-            }
-        );
 
-        //Local Fog Logic
-        game.loop_functions.push(
-            function () {
-                var position = game.camera.position;
-                var x = position.x;
-                var z = position.z;
+                //console.log(min_dist, 1 / Math.max(Math.pow(min_dist, 2), 1), theta / Math.PI * 180);
 
-                var curr_x = (x + game.actual_w / 2) / game.actual_w * game.minimap.width;
-                var curr_z = (z + game.actual_h / 2) / game.actual_h * game.minimap.height;
+                var factor = (best_theta < Math.PI / 3) ? 1 : (best_theta < Math.PI / 1.5) ? (Math.cos((best_theta - Math.PI / 3) * (Math.PI / (Math.PI / 1.5 - Math.PI / 3))) + 1) / 2 : 0;
+                game.scene.fog.density = Math.max(Math.max(1 / Math.max(min_dist / 2.01, 1), 0.025) * factor, 0.025);
 
-                var xb = game.minimap.width / game.w;
-                var zb = game.minimap.height / game.h;
-                var xbuffer = xb / 2;
-                var zbuffer = zb / 2;
-                var xtot = 2 * xbuffer + xb * (game.w - 1);
-                var ztot = 2 * zbuffer + zb * (game.h - 1);
-
-                //game.scene.fog.density = (curr_x / xtot) * (curr_z / ztot);
             }
         );
 
@@ -455,10 +562,10 @@ var game = {
                     let z_curr_z = (z.z + game.actual_h / 2) / game.actual_h * game.minimap.height;
 
                     ctx.beginPath();
-                    ctx.arc(z_curr_x, z_curr_z, radius, 0, 2 * Math.PI, false);
+                    ctx.arc(z_curr_x, z_curr_z, radius - 2, 0, 2 * Math.PI, false);
                     ctx.fillStyle = 'green';
                     ctx.fill();
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 2;
                     ctx.strokeStyle = 'darkgreen';
                     ctx.stroke();
                 }
@@ -485,8 +592,7 @@ var game = {
 
         requestAnimationFrame(
             function animate(now) {
-                requestAnimationFrame(animate);
-
+                game.stats.begin();
                 game.last = game.last || now - 1000 / 60;
                 var delta = Math.min(200, now - game.last);
                 game.last = now;
@@ -496,6 +602,15 @@ var game = {
                         update_function(delta / 1000, now / 1000);
                     }
                 );
+                game.stats.end();
+
+                if (!game.paused) {
+                    requestAnimationFrame(animate);
+                }
+
+                if (game.ended) {
+                    game.reset();
+                }
             }
         );
     }
@@ -555,7 +670,9 @@ window.onload = function () {
 }
 
 window.onresize = function () {
-    game.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (game.renderer) {
+        game.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 }
 
 function randomIntFromInterval(min, max) {
