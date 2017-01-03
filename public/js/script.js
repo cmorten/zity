@@ -20,8 +20,8 @@ var game = {
         game.paused = false;
         game.ended = false;
         game.loop_functions = [];
-        game.w = 5;
-        game.h = 5;
+        game.w = 20;
+        game.h = 20;
         game.actual_w = 20 * (1 + 2 * game.w);
         game.actual_h = 20 * (1 + 2 * game.h);
         game.progress_load.style.width = "0px";
@@ -89,28 +89,35 @@ var game = {
                                         game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
                                         game.generate_city();
 
-                                        game.generate_zombies();
+                                        var loader = new THREE.JSONLoader();
 
-                                        setTimeout(function () {
-                                            game.progress_text.innerHTML = "Loading: Your ability to move";
-                                            game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
-                                            game.gen_controls();
+                                        loader.load('./models/basic-zombie.json', function (geometry) {
+                                            game.zombie_geometry = geometry;
+
+
+                                            game.generate_zombies();
+
                                             setTimeout(function () {
-                                                game.progress_text.innerHTML = "Loading: The final countdown";
+                                                game.progress_text.innerHTML = "Loading: Your ability to move";
                                                 game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
-
-                                                //Drawing scene
-                                                game.init_loop_functions();
-                                                game.draw();
-
+                                                game.gen_controls();
                                                 setTimeout(function () {
-                                                    document.getElementById('loading').style.display = "none";
-                                                    document.getElementById('welcome').style.display = "none";
-                                                    document.getElementById('map-container').style.display = "inline-block";
-                                                    document.body.appendChild(game.renderer.domElement);
-                                                }, 2000);
+                                                    game.progress_text.innerHTML = "Loading: The final countdown";
+                                                    game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
+
+                                                    //Drawing scene
+                                                    game.init_loop_functions();
+                                                    game.draw();
+
+                                                    setTimeout(function () {
+                                                        document.getElementById('loading').style.display = "none";
+                                                        document.getElementById('welcome').style.display = "none";
+                                                        document.getElementById('map-container').style.display = "inline-block";
+                                                        document.body.appendChild(game.renderer.domElement);
+                                                    }, 2000);
+                                                }, 60);
                                             }, 60);
-                                        }, 60);
+                                        });
                                     }, 60);
                                 }, 60);
                             }, 60);
@@ -259,7 +266,7 @@ var game = {
         //Zombies
         game.zombies = [];
 
-        for (var i = 0; i < 1; i++) {
+        for (var i = 0; i < 14; i++) {
             let alg_num = randomIntFromInterval(1, 9);
             switch (alg_num) {
             case 1:
@@ -445,59 +452,55 @@ var game = {
                     }
 
                     //Local Fog Logic
-                    var cos_theta = (look_vector.x * (z.x - position.x) + look_vector.z * (z.z - position.z)) / (Math.sqrt(Math.pow(look_vector.x, 2) + Math.pow(look_vector.z, 2)) * Math.sqrt(Math.pow((z.x - position.x), 2) + Math.pow((z.z - position.z), 2)));
-                    var theta = Math.acos(cos_theta);
-
-
+                    //var cos_theta = (look_vector.x * (z.x - position.x) + look_vector.z * (z.z - position.z)) / (Math.sqrt(Math.pow(look_vector.x, 2) + Math.pow(look_vector.z, 2)) * Math.sqrt(Math.pow((z.x - position.x), 2) + Math.pow((z.z - position.z), 2)));
+                    //var theta = Math.acos(cos_theta);
 
                     var flag = false;
 
-                    if (theta < Math.PI / 2) {
-                        if ((z.step_x == game.step_x || z.step_x == game.step_x - 1 || z.step_x == game.step_x + 1) && (z.step_z == game.step_z || z.step_z == game.step_z - 1 || z.step_z == game.step_z + 1)) {
-                            flag = true;
-                        } else {
-                            if (z.step_x == game.step_x) {
-                                let start = Math.min(z.step_z, game.step_z);
-                                let stop = Math.max(z.step_z, game.step_z);
-                                if (stop - start < 6) {
-                                    flag = true;
-                                    for (var j = start; j < stop; j++) {
-                                        if (game.city_map[z.step_x][j] == 1) {
-                                            flag = false;
-                                            break;
-                                        }
+                    //if (theta < Math.PI / 2) {
+                    if ((z.step_x == game.step_x || z.step_x == game.step_x - 1 || z.step_x == game.step_x + 1) && (z.step_z == game.step_z || z.step_z == game.step_z - 1 || z.step_z == game.step_z + 1)) {
+                        flag = true;
+                    } else {
+                        if (z.step_x == game.step_x) {
+                            let start = Math.min(z.step_z, game.step_z);
+                            let stop = Math.max(z.step_z, game.step_z);
+                            if (stop - start < 6) {
+                                flag = true;
+                                for (var j = start; j < stop; j++) {
+                                    if (game.city_map[z.step_x][j] == 1) {
+                                        flag = false;
+                                        break;
                                     }
                                 }
-                            } else if (z.step_z == game.step_z) {
-                                let start = Math.min(z.step_x, game.step_x);
-                                let stop = Math.max(z.step_x, game.step_x);
-                                if (stop - start < 6) {
-                                    flag = true;
-                                    for (var j = start; j < stop; j++) {
-                                        if (game.city_map[j][z.step_z] == 1) {
-                                            flag = false;
-                                            break;
-                                        }
+                            }
+                        } else if (z.step_z == game.step_z) {
+                            let start = Math.min(z.step_x, game.step_x);
+                            let stop = Math.max(z.step_x, game.step_x);
+                            if (stop - start < 6) {
+                                flag = true;
+                                for (var j = start; j < stop; j++) {
+                                    if (game.city_map[j][z.step_z] == 1) {
+                                        flag = false;
+                                        break;
                                     }
                                 }
                             }
                         }
                     }
+                    //}
 
-                    console.log((theta / (Math.PI) * 180) % 180, flag);
-
-                    if (flag == true) {
-                        min_dist = Math.min(dist, min_dist);
-                        if (dist == min_dist) {
-                            closest_z = z;
-                            best_theta = theta;
-                        }
+                    //if (flag == true) {
+                    min_dist = Math.min(dist, min_dist);
+                    if (dist == min_dist) {
+                        closest_z = z;
+                        //best_theta = theta;
                     }
+                    //}
                 }
 
                 //console.log(min_dist, 1 / Math.max(Math.pow(min_dist, 2), 1), theta / Math.PI * 180);
 
-                var factor = (best_theta < Math.PI / 3) ? 1 : (best_theta < Math.PI / 1.5) ? (Math.cos((best_theta - Math.PI / 3) * (Math.PI / (Math.PI / 1.5 - Math.PI / 3))) + 1) / 2 : 0;
+                var factor = 1; //(best_theta < Math.PI / 3) ? 1 : (best_theta < Math.PI / 1.5) ? (Math.cos((best_theta - Math.PI / 3) * (Math.PI / (Math.PI / 1.5 - Math.PI / 3))) + 1) / 2 : 0;
                 game.scene.fog.density = Math.max(Math.max(1 / Math.max(min_dist / 2.01, 1), 0.025) * factor, 0.025);
 
             }
@@ -619,19 +622,13 @@ var game = {
 var zombie = function (alg, speed) {
     var start_x = randomIntFromInterval(0, game.w - 1);
     var start_z = randomIntFromInterval(0, game.h - 1);
-
-    var geometry = new THREE.CubeGeometry(0.5, 1.4, 0.5);
-
-    var texture = new THREE.Texture(generateTextureCanvas());
-    texture.anisotropy = game.renderer.getMaxAnisotropy();
-    texture.needsUpdate = true;
-
     var material = new THREE.MeshLambertMaterial({
         map: texture,
         vertexColors: THREE.VertexColors
     });
 
-    var obj = new THREE.Mesh(geometry, material);
+    var obj = new THREE.Mesh(game.zombie_geometry, material);
+
     obj.position.set(x, 0.7, z);
     obj.castShadow = true;
     obj.receiveShadow = true;
