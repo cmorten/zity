@@ -570,7 +570,7 @@ var game = {
                     ctx.stroke();
                 }
 
-                /*ctx2.globalCompositeOperation = 'source-over';
+                ctx2.globalCompositeOperation = 'source-over';
                 ctx2.clearRect(0, 0, minimap.width, minimap.height);
                 ctx2.fillStyle = overlay;
                 ctx2.fillRect(0, 0, minimap.width, minimap.height);
@@ -582,7 +582,7 @@ var game = {
 
                 ctx2.globalCompositeOperation = 'destination-out';
                 ctx2.fillStyle = radGrd;
-                ctx2.fillRect(pX - r2, pY - r2, r2 * 2, r2 * 2);*/
+                ctx2.fillRect(pX - r2, pY - r2, r2 * 2, r2 * 2);
             }
         );
     },
