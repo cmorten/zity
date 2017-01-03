@@ -91,7 +91,7 @@ var game = {
 
                                         var loader = new THREE.JSONLoader();
 
-                                        loader.load('./models/basic-zombie.json', function (geometry) {
+                                        loader.load('../models/basic-zombie.json', function (geometry) {
                                             game.zombie_geometry = geometry;
 
 
