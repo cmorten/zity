@@ -7,7 +7,10 @@
     },
     "dependencies": {
         "express": "4.13.x",
-        "cfenv": "1.0.x"
+        "cfenv": "1.0.x",
+        "fs": "*",
+        "http": "*",
+        "body-parser": "*"
     },
     "repository": {},
     "engines": {
