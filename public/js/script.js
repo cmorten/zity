@@ -91,8 +91,10 @@ var game = {
 
                                         var loader = new THREE.JSONLoader();
 
-                                        loader.load('../models/basic-zombie.json', function (geometry) {
+                                        loader.load('./models/basic-zombie.json', function (geometry, material) {
+                                            console.log(geometry);
                                             game.zombie_geometry = geometry;
+                                            game.zombie_material = material;
 
 
                                             game.generate_zombies();
@@ -573,7 +575,7 @@ var game = {
                     ctx.stroke();
                 }
 
-                ctx2.globalCompositeOperation = 'source-over';
+                /*ctx2.globalCompositeOperation = 'source-over';
                 ctx2.clearRect(0, 0, minimap.width, minimap.height);
                 ctx2.fillStyle = overlay;
                 ctx2.fillRect(0, 0, minimap.width, minimap.height);
@@ -585,7 +587,7 @@ var game = {
 
                 ctx2.globalCompositeOperation = 'destination-out';
                 ctx2.fillStyle = radGrd;
-                ctx2.fillRect(pX - r2, pY - r2, r2 * 2, r2 * 2);
+                ctx2.fillRect(pX - r2, pY - r2, r2 * 2, r2 * 2);*/
             }
         );
     },
@@ -622,14 +624,16 @@ var game = {
 var zombie = function (alg, speed) {
     var start_x = randomIntFromInterval(0, game.w - 1);
     var start_z = randomIntFromInterval(0, game.h - 1);
-    var material = new THREE.MeshLambertMaterial({
-        map: texture,
-        vertexColors: THREE.VertexColors
+
+    var meshMaterial = new THREE.MeshLambertMaterial({
+        color: 0x577166,
+        emissive: 0x2c3c25
     });
 
-    var obj = new THREE.Mesh(game.zombie_geometry, material);
+    var obj = new THREE.Mesh(game.zombie_geometry, meshMaterial);
 
-    obj.position.set(x, 0.7, z);
+    obj.scale.set(0.1, 0.1, 0.1);
+    obj.position.set(x, 0.8, z);
     obj.castShadow = true;
     obj.receiveShadow = true;
 
@@ -653,6 +657,7 @@ var zombie = function (alg, speed) {
                 this.obj.position.z = this.z;
                 this.step_x = ((this.x + game.actual_w / 2) / game.block_x) | 0;
                 this.step_z = ((this.z + game.actual_h / 2) / game.block_z) | 0;
+                this.obj.lookAt(game.camera.position);
             }
         };
     } else {
