@@ -91,10 +91,10 @@ var game = {
 
                                         var loader = new THREE.JSONLoader();
 
-                                        loader.load('./models/basic-zombie.json', function (geometry, material) {
+                                        loader.load('./models/animated.json', function (geometry, materials) {
                                             console.log(geometry);
                                             game.zombie_geometry = geometry;
-                                            game.zombie_material = material;
+                                            game.zombie_material = materials;
 
 
                                             game.generate_zombies();
@@ -445,7 +445,7 @@ var game = {
                     //TODO: more natural movement + some randomness
                     z.x += dir.x;
                     z.z += dir.z;
-                    z.update();
+                    z.update(delta);
 
                     var dist = Math.sqrt(Math.pow(z.x - position.x, 2) + Math.pow(z.z - position.z, 2));
 
@@ -630,12 +630,27 @@ var zombie = function (alg, speed) {
         emissive: 0x2c3c25
     });
 
-    var obj = new THREE.Mesh(game.zombie_geometry, meshMaterial);
+    //var obj = new THREE.Mesh(game.zombie_geometry, meshMaterial);
+
+    var obj = new THREE.SkinnedMesh(game.zombie_geometry, meshMaterial);
+    //var mixer = new THREE.AnimationMixer(obj);
+
+    console.log(obj);
 
     obj.scale.set(0.1, 0.1, 0.1);
     obj.position.set(x, 0.8, z);
     obj.castShadow = true;
     obj.receiveShadow = true;
+
+    THREE.AnimationHandler.add(obj.geometry.animation);
+    var animation = new THREE.Animation(obj, "ArmatureAction", THREE.AnimationHandler.CATMULLROM);
+    animation.play();
+
+    //var action = {};
+    //action.walk = mixer.clipAction(game.zombie_geometry.animations[0]);
+    //action.walk.setEffectiveWeight(1);
+    //action.walk.enabled = true;
+    //action.walk.play();
 
     var x = (start_x * 2 + 1.5) * game.block_x - game.actual_w / 2;
     var z = (start_z * 2 + 1.5) * game.block_z - game.actual_h / 2;
@@ -652,12 +667,14 @@ var zombie = function (alg, speed) {
             speed: speed,
             alg: alg,
             obj: obj,
-            update: function () {
+            animation: animation,
+            update: function (delta) {
                 this.obj.position.x = this.x;
                 this.obj.position.z = this.z;
                 this.step_x = ((this.x + game.actual_w / 2) / game.block_x) | 0;
                 this.step_z = ((this.z + game.actual_h / 2) / game.block_z) | 0;
                 this.obj.lookAt(game.camera.position);
+                this.animation.update(delta);
             }
         };
     } else {
