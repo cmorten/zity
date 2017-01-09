@@ -20,8 +20,8 @@ var game = {
         game.paused = false;
         game.ended = false;
         game.loop_functions = [];
-        game.w = 20;
-        game.h = 20;
+        game.w = 14;
+        game.h = 14;
         game.actual_w = 20 * (1 + 2 * game.w);
         game.actual_h = 20 * (1 + 2 * game.h);
         game.progress_load.style.width = "0px";
@@ -43,8 +43,8 @@ var game = {
                 });
                 game.renderer.setSize(window.innerWidth, window.innerHeight);
                 game.renderer.setClearColor(0xFFFDE1, 1);
-                game.renderer.shadowMapEnabled = true;
-                game.renderer.shadowMapType = THREE.PCFSoftShadowMap;
+                game.renderer.shadowMap.enabled = true;
+                game.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
                 //camera
                 setTimeout(function () {
@@ -91,10 +91,15 @@ var game = {
 
                                         var loader = new THREE.JSONLoader();
 
-                                        loader.load('./models/animated.json', function (geometry, materials) {
+                                        loader.load('./models/bob_walk_tex.json', function (geometry, materials) {
                                             console.log(geometry);
                                             game.zombie_geometry = geometry;
-                                            game.zombie_material = materials;
+
+                                            materials.forEach(function (material) {
+                                                material.skinning = true;
+                                            });
+
+                                            game.zombie_material = new THREE.MeshFaceMaterial(materials);
 
 
                                             game.generate_zombies();
@@ -207,13 +212,19 @@ var game = {
                 if (i == 0 || j == 0 || i == game.tot_x_cols - 1 || j == game.tot_z_cols - 1) {
                     game.city_map[i][j] = 1;
                     var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
-                    THREE.GeometryUtils.merge(game.cityGeometry, city);
+
+                    //THREE.GeometryUtils.merge(game.cityGeometry, city);
+                    city.updateMatrix();
+                    game.cityGeometry.merge(city.geometry, city.matrix);
                 }
 
                 if (i % 2 == 0 && j % 2 == 0) {
                     game.city_map[i][j] = 1;
                     var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
-                    THREE.GeometryUtils.merge(game.cityGeometry, city);
+
+                    //THREE.GeometryUtils.merge(game.cityGeometry, city);
+                    city.updateMatrix();
+                    game.cityGeometry.merge(city.geometry, city.matrix);
                 }
 
                 if ((i - 1) % 2 == 0 && (j - 1) % 2 == 0) {
@@ -224,22 +235,34 @@ var game = {
                     if (j - 1 > 0 && bounds[0] == 1) {
                         game.city_map[i][j - 1] = 1;
                         var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, (j - 1) * game.block_z - game.actual_h / 2 + 5, j * game.block_z - game.actual_h / 2 - 5);
-                        THREE.GeometryUtils.merge(game.cityGeometry, city);
+
+                        //THREE.GeometryUtils.merge(game.cityGeometry, city);
+                        city.updateMatrix();
+                        game.cityGeometry.merge(city.geometry, city.matrix);
                     }
                     if (i + 1 < game.tot_x_cols && bounds[1] == 1) {
                         game.city_map[i + 1][j] = 1;
                         var city = new THREEx.ProceduralCity(game.renderer, 20, (i + 1) * game.block_x - game.actual_w / 2 + 5, (i + 2) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
-                        THREE.GeometryUtils.merge(game.cityGeometry, city);
+
+                        //THREE.GeometryUtils.merge(game.cityGeometry, city);
+                        city.updateMatrix();
+                        game.cityGeometry.merge(city.geometry, city.matrix);
                     }
                     if (j + 1 < game.tot_z_cols && bounds[2] == 1) {
                         game.city_map[i][j + 1] = 1;
                         var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, (j + 1) * game.block_z - game.actual_h / 2 + 5, (j + 2) * game.block_z - game.actual_h / 2 - 5);
-                        THREE.GeometryUtils.merge(game.cityGeometry, city);
+
+                        //THREE.GeometryUtils.merge(game.cityGeometry, city);
+                        city.updateMatrix();
+                        game.cityGeometry.merge(city.geometry, city.matrix);
                     }
                     if (x - 1 > 0 && bounds[3] == 1) {
                         game.city_map[i - 1][j] = 1;
                         var city = new THREEx.ProceduralCity(game.renderer, 20, (i - 1) * game.block_x - game.actual_w / 2 + 5, i * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
-                        THREE.GeometryUtils.merge(game.cityGeometry, city);
+
+                        //THREE.GeometryUtils.merge(game.cityGeometry, city);
+                        city.updateMatrix();
+                        game.cityGeometry.merge(city.geometry, city.matrix);
                     }
                 }
             }
@@ -268,7 +291,7 @@ var game = {
         //Zombies
         game.zombies = [];
 
-        for (var i = 0; i < 14; i++) {
+        for (var i = 0; i < 12; i++) {
             let alg_num = randomIntFromInterval(1, 9);
             switch (alg_num) {
             case 1:
@@ -300,7 +323,7 @@ var game = {
                 break;
             }
 
-            let z = new zombie(finder, randomIntFromInterval(3, 5));
+            let z = new zombie(finder, 3);
             game.zombies.push(z);
         }
     },
@@ -308,7 +331,7 @@ var game = {
     gen_controls: function () {
         //Movement Controls
         game.controls = new THREE.FirstPersonControls(game.camera);
-        game.controls.movementSpeed = 20;
+        game.controls.movementSpeed = 3.5;
         game.controls.lookSpeed = 0.1;
         game.controls.lookVertical = true;
         //game.controls.constrainVertical = true;
@@ -427,8 +450,13 @@ var game = {
                 for (var i = 0; i < game.zombies.length; i++) {
                     let grid = game.grid.clone();
                     let z = game.zombies[i];
+
                     let path = z.alg.findPath(z.step_x, z.step_z, step_x, step_z, grid);
-                    var speed = z.speed * delta;
+
+                    var dist = Math.sqrt(Math.pow(z.x - position.x, 2) + Math.pow(z.z - position.z, 2));
+
+                    var speedup = Math.min(4, Math.max(1, 20 / dist));
+                    var speed = z.speed * delta * speedup;
                     var curr_x = z.x;
                     var curr_z = z.z;
 
@@ -445,21 +473,16 @@ var game = {
                     //TODO: more natural movement + some randomness
                     z.x += dir.x;
                     z.z += dir.z;
-                    z.update(delta);
+                    z.update(speed / 2);
 
-                    var dist = Math.sqrt(Math.pow(z.x - position.x, 2) + Math.pow(z.z - position.z, 2));
 
                     if (dist < 1) {
                         game.end();
                     }
 
                     //Local Fog Logic
-                    //var cos_theta = (look_vector.x * (z.x - position.x) + look_vector.z * (z.z - position.z)) / (Math.sqrt(Math.pow(look_vector.x, 2) + Math.pow(look_vector.z, 2)) * Math.sqrt(Math.pow((z.x - position.x), 2) + Math.pow((z.z - position.z), 2)));
-                    //var theta = Math.acos(cos_theta);
-
                     var flag = false;
 
-                    //if (theta < Math.PI / 2) {
                     if ((z.step_x == game.step_x || z.step_x == game.step_x - 1 || z.step_x == game.step_x + 1) && (z.step_z == game.step_z || z.step_z == game.step_z - 1 || z.step_z == game.step_z + 1)) {
                         flag = true;
                     } else {
@@ -489,21 +512,14 @@ var game = {
                             }
                         }
                     }
-                    //}
 
-                    //if (flag == true) {
                     min_dist = Math.min(dist, min_dist);
                     if (dist == min_dist) {
                         closest_z = z;
-                        //best_theta = theta;
                     }
-                    //}
                 }
 
-                //console.log(min_dist, 1 / Math.max(Math.pow(min_dist, 2), 1), theta / Math.PI * 180);
-
-                var factor = 1; //(best_theta < Math.PI / 3) ? 1 : (best_theta < Math.PI / 1.5) ? (Math.cos((best_theta - Math.PI / 3) * (Math.PI / (Math.PI / 1.5 - Math.PI / 3))) + 1) / 2 : 0;
-                game.scene.fog.density = Math.max(Math.max(1 / Math.max(min_dist / 2.01, 1), 0.025) * factor, 0.025);
+                game.scene.fog.density = Math.max(1 / Math.max(min_dist / 1.5, 0.8), 0.025);
 
             }
         );
@@ -575,7 +591,7 @@ var game = {
                     ctx.stroke();
                 }
 
-                /*ctx2.globalCompositeOperation = 'source-over';
+                ctx2.globalCompositeOperation = 'source-over';
                 ctx2.clearRect(0, 0, minimap.width, minimap.height);
                 ctx2.fillStyle = overlay;
                 ctx2.fillRect(0, 0, minimap.width, minimap.height);
@@ -587,7 +603,7 @@ var game = {
 
                 ctx2.globalCompositeOperation = 'destination-out';
                 ctx2.fillStyle = radGrd;
-                ctx2.fillRect(pX - r2, pY - r2, r2 * 2, r2 * 2);*/
+                ctx2.fillRect(pX - r2, pY - r2, r2 * 2, r2 * 2);
             }
         );
     },
@@ -622,35 +638,21 @@ var game = {
 }
 
 var zombie = function (alg, speed) {
-    var start_x = randomIntFromInterval(0, game.w - 1);
-    var start_z = randomIntFromInterval(0, game.h - 1);
+    var start_x = randomIntFromInterval(0, game.w - 1, [game.start_x - 1, game.start_x, game.start_x + 1]);
+    var start_z = randomIntFromInterval(0, game.h - 1, [game.start_z - 1, game.start_z, game.start_z + 1]);
 
-    var meshMaterial = new THREE.MeshLambertMaterial({
-        color: 0x577166,
-        emissive: 0x2c3c25
-    });
+    var obj = new THREE.SkinnedMesh(game.zombie_geometry, game.zombie_material);
 
-    //var obj = new THREE.Mesh(game.zombie_geometry, meshMaterial);
-
-    var obj = new THREE.SkinnedMesh(game.zombie_geometry, meshMaterial);
-    //var mixer = new THREE.AnimationMixer(obj);
-
-    console.log(obj);
-
-    obj.scale.set(0.1, 0.1, 0.1);
-    obj.position.set(x, 0.8, z);
+    obj.scale.set(0.15, 0.15, 0.15);
+    obj.position.set(x, 0, z);
     obj.castShadow = true;
     obj.receiveShadow = true;
 
-    THREE.AnimationHandler.add(obj.geometry.animation);
-    var animation = new THREE.Animation(obj, "ArmatureAction", THREE.AnimationHandler.CATMULLROM);
-    animation.play();
+    var action = {};
 
-    //var action = {};
-    //action.walk = mixer.clipAction(game.zombie_geometry.animations[0]);
-    //action.walk.setEffectiveWeight(1);
-    //action.walk.enabled = true;
-    //action.walk.play();
+    var mixer = new THREE.AnimationMixer(obj);
+    action.walk = mixer.clipAction(game.zombie_geometry.animations[0]);
+    action.walk.setEffectiveWeight(1).play();
 
     var x = (start_x * 2 + 1.5) * game.block_x - game.actual_w / 2;
     var z = (start_z * 2 + 1.5) * game.block_z - game.actual_h / 2;
@@ -667,13 +669,13 @@ var zombie = function (alg, speed) {
             speed: speed,
             alg: alg,
             obj: obj,
-            animation: animation,
+            animation: mixer,
             update: function (delta) {
                 this.obj.position.x = this.x;
                 this.obj.position.z = this.z;
                 this.step_x = ((this.x + game.actual_w / 2) / game.block_x) | 0;
                 this.step_z = ((this.z + game.actual_h / 2) / game.block_z) | 0;
-                this.obj.lookAt(game.camera.position);
+                this.obj.lookAt(new THREE.Vector3(game.camera.position.x, 0, game.camera.position.z));
                 this.animation.update(delta);
             }
         };
@@ -694,8 +696,20 @@ window.onresize = function () {
     }
 }
 
-function randomIntFromInterval(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
+function randomIntFromInterval(min, max, skip) {
+    if (!skip) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    } else {
+        let flag = true;
+        var a;
+        while (flag) {
+            a = Math.floor(Math.random() * (max - min + 1) + min);
+            if (skip.indexOf(a) == -1) {
+                flag = false;
+            }
+        }
+        return a;
+    }
 }
 
 function transpose(a) {

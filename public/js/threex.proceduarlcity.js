@@ -5,12 +5,13 @@ var THREEx = THREEx || {}
 THREEx.ProceduralCity = function (renderer, num, xmin, xmax, zmin, zmax) {
     var geometry = new THREE.CubeGeometry(1, 1, 1);
     geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
-    geometry.faces.splice(3, 1);
-    geometry.faceVertexUvs[0].splice(3, 1);
-    geometry.faceVertexUvs[0][2][0].set(0, 0);
-    geometry.faceVertexUvs[0][2][1].set(0, 0);
-    geometry.faceVertexUvs[0][2][2].set(0, 0);
-    geometry.faceVertexUvs[0][2][3].set(0, 0);
+    //geometry.faces.splice(3, 1);
+    //geometry.faceVertexUvs[0].splice(3, 1);
+
+    //geometry.faceVertexUvs[0][2][0].set(0, 0);
+    //geometry.faceVertexUvs[0][2][1].set(0, 0);
+    //geometry.faceVertexUvs[0][2][2].set(0, 0);
+    //geometry.faceVertexUvs[0][2][3].set(0, 0);
 
     var buildingMesh = new THREE.Mesh(geometry);
     var light = new THREE.Color(0xffffff)
@@ -42,7 +43,9 @@ THREEx.ProceduralCity = function (renderer, num, xmin, xmax, zmin, zmax) {
             }
         }
 
-        THREE.GeometryUtils.merge(cityGeometry, buildingMesh);
+        buildingMesh.updateMatrix();
+        cityGeometry.merge(buildingMesh.geometry, buildingMesh.matrix);
+        //THREE.GeometryUtils.merge(cityGeometry, buildingMesh);
     }
 
     var texture = new THREE.Texture(generateTextureCanvas());
