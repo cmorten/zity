@@ -60,6 +60,41 @@ h1 {
     box-shadow: 0 0 10px 2px #FFFDE1;
 }
 
+#subtitle {
+    margin-top: 100px;
+}
+
+.select {
+    padding: 20px;
+    width: 300px;
+    height: 100px;
+    border: 3px solid #ccc;
+    color: #fff;
+    background: #111;
+    border-radius: 10px;
+    font-size: 32px;
+    font-family: calibri;
+    text-align: center;
+    cursor: pointer;
+}
+
+.select:hover {
+    color: #FFFDE1;
+    border-color: #FFFDE1;
+    box-shadow: 0 0 10px 2px #FFFDE1;
+}
+
+.select.active {
+    color: #88aa88;
+    border-color: #FFFDE1;
+    background: #FFFfff;
+    box-shadow: 0 0 10px 2px #FFFDE1;
+}
+
+#days {
+    margin-right: 40px;
+}
+
 #loading {
     position: absolute;
     top: 25%;
@@ -92,6 +127,25 @@ h1 {
     left: 0px;
     background: #FFFDE1;
     font-size: 0px;
+}
+
+#timer {
+    position: absolute;
+    display: none;
+    right: 50px;
+    top: 50px;
+    width: 200px;
+    height: 24px;
+    color: #fff;
+    border-radius: 10px;
+    border: 2px solid rgba(200, 200, 200, 0.5);
+    background: #000;
+    z-index: 10000;
+    overflow: hidden;
+    box-shadow: 0 0 20px 10px #111;
+    text-align: right;
+    padding: 10px 10px;
+    font-family: calibri;
 }
 
 #map-container {

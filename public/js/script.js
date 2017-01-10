@@ -1,7 +1,12 @@
+var mode = 1;
+
 var game = {
     init: function () {
         document.getElementById('title').style.display = "none";
         document.getElementById('enter').style.display = "none";
+        document.getElementById('days').style.display = "none";
+        document.getElementById('survival').style.display = "none";
+        document.getElementById('subtitle').style.display = "none";
         document.getElementById('loading').style.display = "inline-block";
 
         var stats = new Stats();
@@ -11,6 +16,7 @@ var game = {
 
         game.progress_load = document.getElementById('progress');
         game.progress_text = document.getElementById('load_text');
+        game.timer = document.getElementById('timer');
         setTimeout(function () {
             game._init();
         }, 60);
@@ -25,13 +31,15 @@ var game = {
         game.actual_w = 20 * (1 + 2 * game.w);
         game.actual_h = 20 * (1 + 2 * game.h);
         game.progress_load.style.width = "0px";
+        game.mode = mode;
+        game.base_fog_level = 0.005;
 
         //scene
         setTimeout(function () {
             game.progress_text.innerHTML = "Loading: The frightful fog";
             game.progress_load.style.width = parseFloat(game.progress_load.style.width) + 40 + "px";
             game.scene = new THREE.Scene();
-            game.scene.fog = new THREE.FogExp2(0xFFFDE1, 0.025);
+            game.scene.fog = new THREE.FogExp2(0xFFFDE1, game.base_fog_level);
             game.scene.background = new THREE.Color(0xFFFDE1);
 
             //renderer
@@ -92,7 +100,6 @@ var game = {
                                         var loader = new THREE.JSONLoader();
 
                                         loader.load('./models/bob_walk_tex.json', function (geometry, materials) {
-                                            console.log(geometry);
                                             game.zombie_geometry = geometry;
 
                                             materials.forEach(function (material) {
@@ -101,7 +108,7 @@ var game = {
 
                                             game.zombie_material = new THREE.MeshFaceMaterial(materials);
 
-
+                                            game.zombies = [];
                                             game.generate_zombies();
 
                                             setTimeout(function () {
@@ -120,7 +127,9 @@ var game = {
                                                         document.getElementById('loading').style.display = "none";
                                                         document.getElementById('welcome').style.display = "none";
                                                         document.getElementById('map-container').style.display = "inline-block";
+                                                        document.getElementById('timer').style.display = "inline-block";
                                                         document.body.appendChild(game.renderer.domElement);
+                                                        game.start_time = new Date();
                                                     }, 2000);
                                                 }, 60);
                                             }, 60);
@@ -211,7 +220,7 @@ var game = {
             for (var j = 0; j < game.tot_z_cols; j++) {
                 if (i == 0 || j == 0 || i == game.tot_x_cols - 1 || j == game.tot_z_cols - 1) {
                     game.city_map[i][j] = 1;
-                    var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
+                    var city = new THREEx.ProceduralCity(game.renderer, 6, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
 
                     //THREE.GeometryUtils.merge(game.cityGeometry, city);
                     city.updateMatrix();
@@ -220,7 +229,7 @@ var game = {
 
                 if (i % 2 == 0 && j % 2 == 0) {
                     game.city_map[i][j] = 1;
-                    var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
+                    var city = new THREEx.ProceduralCity(game.renderer, 6, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
 
                     //THREE.GeometryUtils.merge(game.cityGeometry, city);
                     city.updateMatrix();
@@ -234,7 +243,7 @@ var game = {
 
                     if (j - 1 > 0 && bounds[0] == 1) {
                         game.city_map[i][j - 1] = 1;
-                        var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, (j - 1) * game.block_z - game.actual_h / 2 + 5, j * game.block_z - game.actual_h / 2 - 5);
+                        var city = new THREEx.ProceduralCity(game.renderer, 6, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, (j - 1) * game.block_z - game.actual_h / 2 + 5, j * game.block_z - game.actual_h / 2 - 5);
 
                         //THREE.GeometryUtils.merge(game.cityGeometry, city);
                         city.updateMatrix();
@@ -242,7 +251,7 @@ var game = {
                     }
                     if (i + 1 < game.tot_x_cols && bounds[1] == 1) {
                         game.city_map[i + 1][j] = 1;
-                        var city = new THREEx.ProceduralCity(game.renderer, 20, (i + 1) * game.block_x - game.actual_w / 2 + 5, (i + 2) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
+                        var city = new THREEx.ProceduralCity(game.renderer, 6, (i + 1) * game.block_x - game.actual_w / 2 + 5, (i + 2) * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
 
                         //THREE.GeometryUtils.merge(game.cityGeometry, city);
                         city.updateMatrix();
@@ -250,7 +259,7 @@ var game = {
                     }
                     if (j + 1 < game.tot_z_cols && bounds[2] == 1) {
                         game.city_map[i][j + 1] = 1;
-                        var city = new THREEx.ProceduralCity(game.renderer, 20, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, (j + 1) * game.block_z - game.actual_h / 2 + 5, (j + 2) * game.block_z - game.actual_h / 2 - 5);
+                        var city = new THREEx.ProceduralCity(game.renderer, 6, i * game.block_x - game.actual_w / 2 + 5, (i + 1) * game.block_x - game.actual_w / 2 - 5, (j + 1) * game.block_z - game.actual_h / 2 + 5, (j + 2) * game.block_z - game.actual_h / 2 - 5);
 
                         //THREE.GeometryUtils.merge(game.cityGeometry, city);
                         city.updateMatrix();
@@ -258,7 +267,7 @@ var game = {
                     }
                     if (x - 1 > 0 && bounds[3] == 1) {
                         game.city_map[i - 1][j] = 1;
-                        var city = new THREEx.ProceduralCity(game.renderer, 20, (i - 1) * game.block_x - game.actual_w / 2 + 5, i * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
+                        var city = new THREEx.ProceduralCity(game.renderer, 6, (i - 1) * game.block_x - game.actual_w / 2 + 5, i * game.block_x - game.actual_w / 2 - 5, j * game.block_z - game.actual_h / 2 + 5, (j + 1) * game.block_z - game.actual_h / 2 - 5);
 
                         //THREE.GeometryUtils.merge(game.cityGeometry, city);
                         city.updateMatrix();
@@ -289,49 +298,98 @@ var game = {
 
     generate_zombies: function () {
         //Zombies
-        game.zombies = [];
+        if (game.mode == 1) {
+            var zombie_count_to_add = 1;
+            if (game.zombies.length == 0) {
+                zombie_count_to_add = 6;
+                game.counts = 0.25;
+            }
+            for (var i = 0; i < zombie_count_to_add; i++) {
+                let alg_num = randomIntFromInterval(1, 9);
+                switch (alg_num) {
+                case 1:
+                    var finder = new PF.AStarFinder();
+                    break;
+                case 2:
+                    var finder = new PF.BestFirstFinder();
+                    break;
+                case 3:
+                    var finder = new PF.BreadthFirstFinder();
+                    break;
+                case 4:
+                    var finder = new PF.DijkstraFinder();
+                    break;
+                case 5:
+                    var finder = new PF.JumpPointFinder();
+                    break;
+                case 6:
+                    var finder = new PF.BiAStarFinder();
+                    break;
+                case 7:
+                    var finder = new PF.BiBestFirstFinder();
+                    break;
+                case 8:
+                    var finder = new PF.BiBreadthFirstFinder();
+                    break;
+                case 9:
+                    var finder = new PF.BiDijkstraFinder();
+                    break;
+                }
 
-        for (var i = 0; i < 12; i++) {
-            let alg_num = randomIntFromInterval(1, 9);
-            switch (alg_num) {
-            case 1:
-                var finder = new PF.AStarFinder();
-                break;
-            case 2:
-                var finder = new PF.BestFirstFinder();
-                break;
-            case 3:
-                var finder = new PF.BreadthFirstFinder();
-                break;
-            case 4:
-                var finder = new PF.DijkstraFinder();
-                break;
-            case 5:
-                var finder = new PF.JumpPointFinder();
-                break;
-            case 6:
-                var finder = new PF.BiAStarFinder();
-                break;
-            case 7:
-                var finder = new PF.BiBestFirstFinder();
-                break;
-            case 8:
-                var finder = new PF.BiBreadthFirstFinder();
-                break;
-            case 9:
-                var finder = new PF.BiDijkstraFinder();
-                break;
+                let z = new zombie(finder, 2);
+                game.zombies.push(z);
+                game.counts *= 2;
             }
 
-            let z = new zombie(finder, 3);
-            game.zombies.push(z);
+            if (!game.paused && !game.ended) {
+                setTimeout(function () {
+                    game.generate_zombies();
+                }, game.counts * 60000);
+            }
+
+        } else {
+            for (var i = 0; i < 12; i++) {
+                let alg_num = randomIntFromInterval(1, 9);
+                switch (alg_num) {
+                case 1:
+                    var finder = new PF.AStarFinder();
+                    break;
+                case 2:
+                    var finder = new PF.BestFirstFinder();
+                    break;
+                case 3:
+                    var finder = new PF.BreadthFirstFinder();
+                    break;
+                case 4:
+                    var finder = new PF.DijkstraFinder();
+                    break;
+                case 5:
+                    var finder = new PF.JumpPointFinder();
+                    break;
+                case 6:
+                    var finder = new PF.BiAStarFinder();
+                    break;
+                case 7:
+                    var finder = new PF.BiBestFirstFinder();
+                    break;
+                case 8:
+                    var finder = new PF.BiBreadthFirstFinder();
+                    break;
+                case 9:
+                    var finder = new PF.BiDijkstraFinder();
+                    break;
+                }
+
+                let z = new zombie(finder, 2);
+                game.zombies.push(z);
+            }
         }
     },
 
     gen_controls: function () {
         //Movement Controls
         game.controls = new THREE.FirstPersonControls(game.camera);
-        game.controls.movementSpeed = 3.5;
+        game.controls.movementSpeed = 5;
         game.controls.lookSpeed = 0.1;
         game.controls.lookVertical = true;
         //game.controls.constrainVertical = true;
@@ -348,9 +406,13 @@ var game = {
         document.getElementById('welcome').style.display = "";
         document.getElementById('title').style.display = "";
         document.getElementById('enter').style.display = "";
+        document.getElementById('days').style.display = "";
+        document.getElementById('survival').style.display = "";
+        document.getElementById('subtitle').style.display = "";
         document.body.removeChild(game.renderer.domElement);
         document.body.removeChild(game.stats.dom);
         document.getElementById('map-container').style.display = "none";
+        document.getElementById('timer').style.display = "none";
         game.controls = null;
         game.renderer = null;
         game.scene = null;
@@ -365,6 +427,21 @@ var game = {
             function (delta, now) {
                 game.controls.update(delta);
                 game.camera.position.y = 1;
+
+                let diff = (new Date() - game.start_time) / 1000;
+                let str = "";
+                let hours = (diff / 3600) | 0;
+                str += (hours > 0) ? hours + " hours, " : "";
+                diff -= hours * 3600;
+                let minutes = (diff / 60) | 0;
+                str += (minutes > 0) ? minutes + " mins, " : "";
+                diff -= minutes * 60;
+                str += (diff > 0) ? (diff | 0) + " s" : "";
+                game.timer.innerHTML = "Stayed Alive " + str;
+
+                if (game.mode == 1) {
+                    game.base_fog_level = Math.min(0.05, game.base_fog_level + delta / 4000);
+                }
             }
         );
 
@@ -455,7 +532,7 @@ var game = {
 
                     var dist = Math.sqrt(Math.pow(z.x - position.x, 2) + Math.pow(z.z - position.z, 2));
 
-                    var speedup = Math.min(4, Math.max(1, 20 / dist));
+                    var speedup = Math.min(2, Math.max(1, 20 / dist));
                     var speed = z.speed * delta * speedup;
                     var curr_x = z.x;
                     var curr_z = z.z;
@@ -519,7 +596,7 @@ var game = {
                     }
                 }
 
-                game.scene.fog.density = Math.max(1 / Math.max(min_dist / 1.5, 0.8), 0.025);
+                game.scene.fog.density = Math.max(1 / Math.max(min_dist / 1.5, 4), game.base_fog_level);
 
             }
         );
@@ -688,6 +765,15 @@ window.onload = function () {
     document.getElementById('enter').onclick = function () {
         game.init();
     }
+    var s = document.getElementsByClassName("select");
+    for (let i = 0; i < s.length; i++) {
+        s[i].onclick = () => {
+            s[i].className = "select active";
+            s[(i + 1) % 2].className = "select";
+            mode = i;
+        }
+    }
+    s[mode].className = "select active";
 }
 
 window.onresize = function () {
