@@ -2,6 +2,8 @@
  * @author mrdoob / http://mrdoob.com/
  * @author alteredq / http://alteredqualia.com/
  * @author paulirish / http://paulirish.com/
+ * 
+ * With modifications.
  */
 
 THREE.FirstPersonControls = function (object, domElement) {
@@ -16,7 +18,6 @@ THREE.FirstPersonControls = function (object, domElement) {
 
     this.lookVertical = true;
     this.autoForward = false;
-    // this.invertVertical = false;
 
     this.activeLook = true;
 
@@ -74,12 +75,12 @@ THREE.FirstPersonControls = function (object, domElement) {
 
         if (this.activeLook) {
             switch (event.button) {
-            case 0:
-                this.moveForward = true;
-                break;
-            case 2:
-                this.moveBackward = true;
-                break;
+                case 0:
+                    this.moveForward = true;
+                    break;
+                case 2:
+                    this.moveBackward = true;
+                    break;
             }
         }
         this.mouseDragOn = true;
@@ -91,12 +92,12 @@ THREE.FirstPersonControls = function (object, domElement) {
 
         if (this.activeLook) {
             switch (event.button) {
-            case 0:
-                this.moveForward = false;
-                break;
-            case 2:
-                this.moveBackward = false;
-                break;
+                case 0:
+                    this.moveForward = false;
+                    break;
+                case 2:
+                    this.moveBackward = false;
+                    break;
             }
         }
         this.mouseDragOn = false;
@@ -113,91 +114,89 @@ THREE.FirstPersonControls = function (object, domElement) {
     };
 
     this.onKeyDown = function (event) {
-        //event.preventDefault();
-
         switch (event.keyCode) {
-        case 38:
-            /*up*/
-        case 87:
-            /*W*/
-            this.moveForward = true;
-            break;
+            case 38:
+                /*up*/
+            case 87:
+                /*W*/
+                this.moveForward = true;
+                break;
 
-        case 37:
-            /*left*/
-        case 65:
-            /*A*/
-            this.moveLeft = true;
-            break;
+            case 37:
+                /*left*/
+            case 65:
+                /*A*/
+                this.moveLeft = true;
+                break;
 
-        case 40:
-            /*down*/
-        case 83:
-            /*S*/
-            this.moveBackward = true;
-            break;
+            case 40:
+                /*down*/
+            case 83:
+                /*S*/
+                this.moveBackward = true;
+                break;
 
-        case 39:
-            /*right*/
-        case 68:
-            /*D*/
-            this.moveRight = true;
-            break;
+            case 39:
+                /*right*/
+            case 68:
+                /*D*/
+                this.moveRight = true;
+                break;
 
-        case 82:
-            /*R*/
-            this.moveUp = true;
-            break;
-        case 70:
-            /*F*/
-            this.moveDown = true;
-            break;
+            case 82:
+                /*R*/
+                this.moveUp = true;
+                break;
+            case 70:
+                /*F*/
+                this.moveDown = true;
+                break;
 
-        case 81:
-            /*Q*/
-            this.freeze = !this.freeze;
-            break;
+            case 81:
+                /*Q*/
+                this.freeze = !this.freeze;
+                break;
         }
     };
 
     this.onKeyUp = function (event) {
         switch (event.keyCode) {
-        case 38:
-            /*up*/
-        case 87:
-            /*W*/
-            this.moveForward = false;
-            break;
+            case 38:
+                /*up*/
+            case 87:
+                /*W*/
+                this.moveForward = false;
+                break;
 
-        case 37:
-            /*left*/
-        case 65:
-            /*A*/
-            this.moveLeft = false;
-            break;
+            case 37:
+                /*left*/
+            case 65:
+                /*A*/
+                this.moveLeft = false;
+                break;
 
-        case 40:
-            /*down*/
-        case 83:
-            /*S*/
-            this.moveBackward = false;
-            break;
+            case 40:
+                /*down*/
+            case 83:
+                /*S*/
+                this.moveBackward = false;
+                break;
 
-        case 39:
-            /*right*/
-        case 68:
-            /*D*/
-            this.moveRight = false;
-            break;
+            case 39:
+                /*right*/
+            case 68:
+                /*D*/
+                this.moveRight = false;
+                break;
 
-        case 82:
-            /*R*/
-            this.moveUp = false;
-            break;
-        case 70:
-            /*F*/
-            this.moveDown = false;
-            break;
+            case 82:
+                /*R*/
+                this.moveUp = false;
+                break;
+            case 70:
+                /*F*/
+                this.moveDown = false;
+                break;
         }
     };
 
@@ -207,15 +206,14 @@ THREE.FirstPersonControls = function (object, domElement) {
         }
 
         if (this.heightSpeed) {
-            var y = THREE.Math.clamp(this.object.position.y, this.heightMin, this.heightMax);
-            var heightDelta = y - this.heightMin;
-
+            let y = THREE.Math.clamp(this.object.position.y, this.heightMin, this.heightMax);
+            let heightDelta = y - this.heightMin;
             this.autoSpeedFactor = delta * (heightDelta * this.heightCoef);
         } else {
             this.autoSpeedFactor = 0.0;
         }
 
-        var actualMoveSpeed = delta * this.movementSpeed;
+        let actualMoveSpeed = delta * this.movementSpeed;
 
         if (this.moveForward || (this.autoForward && !this.moveBackward)) {
             this.object.translateZ(-(actualMoveSpeed + this.autoSpeedFactor));
@@ -231,20 +229,13 @@ THREE.FirstPersonControls = function (object, domElement) {
             this.object.translateX(actualMoveSpeed);
         }
 
-        /*if (this.moveUp) {
-            this.object.translateY(actualMoveSpeed);
-        }
-        if (this.moveDown) {
-            this.object.translateY(-actualMoveSpeed);
-        }*/
-
-        var actualLookSpeed = delta * this.lookSpeed;
+        let actualLookSpeed = delta * this.lookSpeed;
 
         if (!this.activeLook) {
             actualLookSpeed = 0;
         }
 
-        var verticalLookRatio = 1;
+        let verticalLookRatio = 1;
 
         if (this.constrainVertical) {
             verticalLookRatio = Math.PI / (this.verticalMax - this.verticalMin);
@@ -264,8 +255,8 @@ THREE.FirstPersonControls = function (object, domElement) {
             this.phi = THREE.Math.mapLinear(this.phi, 0, Math.PI, this.verticalMin, this.verticalMax);
         }
 
-        var targetPosition = this.target;
-        var position = this.object.position;
+        let targetPosition = this.target;
+        let position = this.object.position;
 
         targetPosition.x = position.x + 100 * Math.sin(this.phi) * Math.cos(this.theta);
         targetPosition.y = position.y + 100 * Math.cos(this.phi);

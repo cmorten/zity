@@ -1,13 +1,13 @@
 window.addEventListener('keyup', function (event) {
     Key.onKeyup(event);
 }, false);
+
 window.addEventListener('keydown', function (event) {
     Key.onKeydown(event);
 }, false);
 
-var Key = {
+let Key = {
     _pressed: {},
-
     A: 65,
     W: 87,
     D: 68,

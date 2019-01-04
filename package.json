@@ -1,19 +1,26 @@
 {
     "name": "zity",
+    "description": "A first person zombie survival game.",
     "version": "0.0.1",
-    "private": true,
+    "main": "server.js",
     "scripts": {
-        "start": "node server.js"
+        "start": "nodemon server.js"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/cmorten/zity.git"
+    },
+    "keywords": [],
+    "author": "Craig Morten <craig.morten@hotmail.co.uk>",
+    "license": "Apache 2",
+    "bugs": {
+        "url": "https://github.com/cmorten/zity/issues"
+    },
+    "homepage": "https://github.com/cmorten/zity",
     "dependencies": {
-        "express": "4.13.x",
-        "cfenv": "1.0.x",
-        "fs": "*",
-        "http": "*",
-        "body-parser": "*"
-    },
-    "repository": {},
-    "engines": {
-        "node": "4.x"
+        "body-parser": "^1.18.3",
+        "cfenv": "^1.1.0",
+        "express": "^4.16.4",
+        "nodemon": "^1.18.9"
     }
 }
